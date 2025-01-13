@@ -4,15 +4,18 @@ import (
 	"bufio"
 	"fmt"
 	"github.com/cc-jose-nieto/go-pokedex/internal/PokeApi"
+	"github.com/cc-jose-nieto/go-pokedex/internal/pokecache"
 	"github.com/joho/godotenv"
 	"os"
 	"strings"
+	"time"
 )
 
 type Config struct {
-	PokeApiUrl string
-	Next       string
-	Previous   string
+	PokeApiUrl      string
+	LocationAreaUrl string
+	Next            string
+	Previous        string
 }
 
 type cliCommand struct {
@@ -23,10 +26,16 @@ type cliCommand struct {
 
 var actions = map[string]cliCommand{}
 
+var cache *pokecache.Cache = pokecache.NewCache(time.Second * 10)
+
 func main() {
 	godotenv.Load()
 	c := Config{}
 	c.PokeApiUrl = os.Getenv("POKEAPI_URL")
+	c.LocationAreaUrl = fmt.Sprintf("%s/location-area", c.PokeApiUrl)
+	c.Next = fmt.Sprintf("%s/location-area", c.PokeApiUrl)
+	c.Previous = fmt.Sprintf("%s/location-area", c.PokeApiUrl)
+
 	actions = map[string]cliCommand{
 		"exit": {name: "exit", description: "Exit the Pokedex", callback: func() error { return commandExit(&c) }},
 		"help": {name: "help", description: "Show available commands", callback: func() error { return commandHelp(&c) }},
@@ -86,13 +95,8 @@ func commandHelp(c *Config) error {
 }
 
 func commandMapLocations(c *Config) error {
-	url := fmt.Sprintf("%s/location-area?offset=0&limit=20", c.PokeApiUrl)
 
-	if c.Next != "" {
-		url = c.Next
-	}
-
-	res, err := PokeApi.GetLocations(url)
+	res, err := PokeApi.GetLocations(c.Next, cache)
 
 	if err != nil {
 		return fmt.Errorf("error getting locations: %v", err)
@@ -108,19 +112,18 @@ func commandMapLocations(c *Config) error {
 }
 
 func commandMapBackLocations(c *Config) error {
-
-	if c.Previous == "" {
-		return fmt.Errorf("no previous location found")
-	}
-
-	res, err := PokeApi.GetLocations(c.Previous)
+	fmt.Println(c.Previous)
+	res, err := PokeApi.GetLocations(c.Previous, cache)
 
 	if err != nil {
 		return fmt.Errorf("error getting locations: %v", err)
 	}
 
 	c.Next = res.Next
-	c.Previous = res.Previous
+	if c.Previous = res.Previous; c.Previous == "" {
+		c.Previous = c.LocationAreaUrl
+	}
+
 	for _, location := range res.Results {
 		fmt.Println(location.Name)
 	}
