@@ -45,16 +45,16 @@ func main() {
 	actions = map[string]cliCommand{
 		"exit":    {name: "exit", description: "Exit the Pokedex", callback: commandExit},
 		"help":    {name: "help", description: "Show available commands", callback: commandHelp},
-		"map":     {name: "map", description: "", callback: commandMapLocations},
-		"mapb":    {name: "mapb", description: "", callback: commandMapBackLocations},
-		"explore": {name: "explore", description: "", callback: commandExplore},
-		"catch":   {name: "catch", description: "", callback: commandCatch},
+		"map":     {name: "map", description: "List Location Areas per page (echa page has 20 location areas)", callback: commandMapLocations},
+		"mapb":    {name: "mapb", description: "List Previous Page of Location Areas", callback: commandMapBackLocations},
+		"explore": {name: "explore", description: "Expolers a Location Area and List Pokemons on it", callback: commandExplore},
+		"catch":   {name: "catch", description: "Try to Catch a Pokemon by its name", callback: commandCatch},
 	}
-	//fmt.Print("Welcome to the Pokedex!\n")
-	//fmt.Print("Usage:\n\n")
-	//for _, action := range actions {
-	//	fmt.Printf("%s: %s\n", action.name, action.description)
-	//}
+	fmt.Print("Welcome to the Pokedex!\n")
+	fmt.Print("Usage:\n\n")
+	for _, action := range actions {
+		fmt.Printf("%s: %s\n", action.name, action.description)
+	}
 	scanner := bufio.NewScanner(bufio.NewReader(os.Stdin))
 	for {
 		fmt.Print("Pokedex > ")
@@ -170,6 +170,21 @@ func commandCatch(c *Config, args ...string) error {
 		return nil
 	}
 
+	if strings.ToLower(pokemonName) == "cukuy" || strings.ToLower(pokemonName) == "oscar" {
+		fmt.Printf("%s is a Special Pokemon, you can't catch this pokemon.\n", pokemonName)
+		time.Sleep(time.Second * 3)
+		fmt.Printf("%s ran away!\n", pokemonName)
+		return nil
+	}
+
+	if strings.ToLower(pokemonName) == "jose" || strings.ToLower(pokemonName) == "nietovi" {
+		fmt.Printf("%s is a Legendary Pokemon, you can't catch this pokemon.\n", pokemonName)
+		time.Sleep(time.Second * 3)
+		fmt.Printf("%s ran away!\n", pokemonName)
+		fmt.Printf("You have been very lucky to see this Pokémon.\n")
+		return nil
+	}
+
 	url := fmt.Sprintf("%s/pokemon/%s", c.PokeApiUrl, pokemonName)
 
 	pokemon, err := PokeApi.GetPokemonByName(url, cache)
@@ -189,8 +204,6 @@ func commandCatch(c *Config, args ...string) error {
 	} else {
 		fmt.Println("pokemon not caught, try again")
 	}
-
-	fmt.Println(pokemon)
 
 	return nil
 }
