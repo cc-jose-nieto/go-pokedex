@@ -22,3 +22,7 @@ func (pokedex *Pokedex) Get(pokemonName string) (PokeApi.Pokemon, error) {
 
 	return pokemon, nil
 }
+
+func (pokedex *Pokedex) GetAll() map[string]PokeApi.Pokemon {
+	return pokedex.Pokemons
+}

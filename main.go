@@ -49,6 +49,7 @@ func main() {
 		"explore": {name: "explore", description: "Expolers a Location Area and List Pokemons on it", callback: commandExplore},
 		"catch":   {name: "catch", description: "Try to Catch a Pokemon by its name", callback: commandCatch},
 		"inspect": {name: "inspect", description: " It takes the name of a Pokemon and prints the name, height, weight, stats and type(s) of the Pokemon", callback: commandInspect},
+		"pokedex": {name: "pokedex", description: "Shows all Pokemons in the Pokedex", callback: commandPokedex},
 	}
 	fmt.Print("Welcome to the Pokedex!\n")
 	fmt.Print("Usage:\n\n")
@@ -229,6 +230,21 @@ func commandInspect(c *Config, args ...string) error {
 	fmt.Println("Types:")
 	for _, t := range pokemon.Types {
 		fmt.Printf("  -%s\n", t.Type.Name)
+	}
+
+	return nil
+}
+
+func commandPokedex(c *Config, args ...string) error {
+	pokemons := pokedex.GetAll()
+	if len(pokemons) == 0 {
+		fmt.Println("There are no Pokemons in the Pokedex")
+		return nil
+	}
+
+	fmt.Println("Your Pokedex:")
+	for _, pokemon := range pokemons {
+		fmt.Printf(" - %s\n", pokemon.Name)
 	}
 
 	return nil
