@@ -21,7 +21,7 @@ type Config struct {
 type cliCommand struct {
 	name        string
 	description string
-	callback    func() error
+	callback    func(config *Config, args ...string) error
 }
 
 var actions = map[string]cliCommand{}
@@ -37,10 +37,11 @@ func main() {
 	c.Previous = fmt.Sprintf("%s/location-area", c.PokeApiUrl)
 
 	actions = map[string]cliCommand{
-		"exit": {name: "exit", description: "Exit the Pokedex", callback: func() error { return commandExit(&c) }},
-		"help": {name: "help", description: "Show available commands", callback: func() error { return commandHelp(&c) }},
-		"map":  {name: "map", description: "", callback: func() error { return commandMapLocations(&c) }},
-		"mapb": {name: "mapb", description: "", callback: func() error { return commandMapBackLocations(&c) }},
+		"exit":    {name: "exit", description: "Exit the Pokedex", callback: commandExit},
+		"help":    {name: "help", description: "Show available commands", callback: commandHelp},
+		"map":     {name: "map", description: "", callback: commandMapLocations},
+		"mapb":    {name: "mapb", description: "", callback: commandMapBackLocations},
+		"explore": {name: "explore", description: "", callback: commandExplore},
 	}
 	//fmt.Print("Welcome to the Pokedex!\n")
 	//fmt.Print("Usage:\n\n")
@@ -63,7 +64,7 @@ func main() {
 			continue
 		}
 
-		_ = actions[words[0]].callback()
+		_ = actions[words[0]].callback(&c, words[1:]...)
 	}
 }
 
@@ -80,13 +81,13 @@ func cleanInput(text string) []string {
 	return newWords
 }
 
-func commandExit(c *Config) error {
+func commandExit(c *Config, args ...string) error {
 	fmt.Print("Closing the Pokedex... Goodbye!")
 	os.Exit(0)
 	return nil
 }
 
-func commandHelp(c *Config) error {
+func commandHelp(c *Config, args ...string) error {
 	fmt.Print("Available commands:\n\n")
 	for _, action := range actions {
 		fmt.Printf("%s: %s\n", action.name, action.description)
@@ -94,7 +95,7 @@ func commandHelp(c *Config) error {
 	return nil
 }
 
-func commandMapLocations(c *Config) error {
+func commandMapLocations(c *Config, args ...string) error {
 
 	res, err := PokeApi.GetLocations(c.Next, cache)
 
@@ -111,7 +112,7 @@ func commandMapLocations(c *Config) error {
 
 }
 
-func commandMapBackLocations(c *Config) error {
+func commandMapBackLocations(c *Config, args ...string) error {
 	fmt.Println(c.Previous)
 	res, err := PokeApi.GetLocations(c.Previous, cache)
 
@@ -130,4 +131,20 @@ func commandMapBackLocations(c *Config) error {
 
 	return nil
 
+}
+
+func commandExplore(c *Config, args ...string) error {
+	fmt.Printf("Exploring %s...\n", args[0])
+	url := fmt.Sprintf("%s/location-area/%s", c.PokeApiUrl, args[0])
+
+	pokemons, err := PokeApi.GetPokemonFromLocationArea(url, cache)
+	if err != nil {
+		return fmt.Errorf("error getting pokemon: %v", err)
+	}
+
+	for _, pokemon := range pokemons {
+		fmt.Println(pokemon.Name)
+	}
+
+	return nil
 }
