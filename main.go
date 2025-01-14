@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"fmt"
 	"github.com/cc-jose-nieto/go-pokedex/internal/PokeApi"
-	"github.com/cc-jose-nieto/go-pokedex/internal/PokeBall"
 	"github.com/cc-jose-nieto/go-pokedex/internal/Pokedex"
 	"github.com/cc-jose-nieto/go-pokedex/internal/pokecache"
 	"github.com/joho/godotenv"
@@ -49,6 +48,7 @@ func main() {
 		"mapb":    {name: "mapb", description: "List Previous Page of Location Areas", callback: commandMapBackLocations},
 		"explore": {name: "explore", description: "Expolers a Location Area and List Pokemons on it", callback: commandExplore},
 		"catch":   {name: "catch", description: "Try to Catch a Pokemon by its name", callback: commandCatch},
+		"inspect": {name: "inspect", description: " It takes the name of a Pokemon and prints the name, height, weight, stats and type(s) of the Pokemon", callback: commandInspect},
 	}
 	fmt.Print("Welcome to the Pokedex!\n")
 	fmt.Print("Usage:\n\n")
@@ -190,19 +190,45 @@ func commandCatch(c *Config, args ...string) error {
 	pokemon, err := PokeApi.GetPokemonByName(url, cache)
 
 	if err != nil {
-		fmt.Printf("Pokemon %s does not exist", pokemonName)
+		fmt.Println(err)
+		fmt.Printf("Pokemon %s does not exist\n", pokemonName)
 		return nil
 	}
 
-	time.Sleep(time.Second * 5)
-	if ok := PokeBall.Catching(pokemon); ok {
-		err = pokedex.Add(pokemon)
-		if err != nil {
-			fmt.Printf("error adding pokemon to pokedex: %v\n", err)
-			return nil
-		}
-	} else {
-		fmt.Println("pokemon not caught, try again")
+	//time.Sleep(time.Second * 5)
+
+	//if ok := PokeBall.Catching(pokemon); ok {
+	err = pokedex.Add(pokemon)
+	if err != nil {
+		fmt.Printf("error adding pokemon to pokedex: %v\n", err)
+		return nil
+	}
+	//} else {
+	//	fmt.Println("pokemon not caught, try again")
+	//}
+
+	return nil
+}
+
+func commandInspect(c *Config, args ...string) error {
+	pokemonName := args[0]
+
+	pokemon, err := pokedex.Get(pokemonName)
+	if err != nil {
+		fmt.Println(err)
+		return nil
+	}
+
+	fmt.Printf("Name: %s\n", pokemon.Name)
+	fmt.Printf("Height: %d\n", pokemon.Height)
+	fmt.Printf("Weight: %d\n", pokemon.Weight)
+	fmt.Println("Stats:")
+	for _, s := range pokemon.Stats {
+		fmt.Printf("  -%s: %d\n", s.Stat.Name, s.Value)
+	}
+	fmt.Println("Types:")
+	for _, t := range pokemon.Types {
+		fmt.Printf("  -%s\n", t.Type.Name)
 	}
 
 	return nil

@@ -17,7 +17,7 @@ func (pokedex *Pokedex) Add(pokemon PokeApi.Pokemon) error {
 func (pokedex *Pokedex) Get(pokemonName string) (PokeApi.Pokemon, error) {
 	pokemon, ok := pokedex.Pokemons[pokemonName]
 	if !ok {
-		return PokeApi.Pokemon{}, fmt.Errorf("pokemon not found")
+		return PokeApi.Pokemon{}, fmt.Errorf("you have not caught that pokemon")
 	}
 
 	return pokemon, nil

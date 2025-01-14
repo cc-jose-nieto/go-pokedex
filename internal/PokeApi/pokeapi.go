@@ -52,8 +52,29 @@ func GetLocations(apiUrl string, cache *pokecache.Cache) (LocationResponse, erro
 }
 
 type Pokemon struct {
-	Name           string `json:"name"`
-	BaseExperience int    `json:"base_experience"`
+	Name           string         `json:"name"`
+	BaseExperience int            `json:"base_experience"`
+	Height         int            `json:"height"`
+	Weight         int            `json:"weight"`
+	Stats          []PokemonStats `json:"stats"`
+	Types          []PokemonTypes `json:"types"`
+}
+
+type Stat struct {
+	Name string `json:"name"`
+}
+
+type Type struct {
+	Name string `json:"name"`
+}
+
+type PokemonTypes struct {
+	Type Type `json:"type"`
+}
+
+type PokemonStats struct {
+	Stat  Stat `json:"stat"`
+	Value int  `json:"base_stat"`
 }
 
 type PokemonEncounter struct {
