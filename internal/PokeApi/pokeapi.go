@@ -52,7 +52,8 @@ func GetLocations(apiUrl string, cache *pokecache.Cache) (LocationResponse, erro
 }
 
 type Pokemon struct {
-	Name string `json:"name"`
+	Name           string `json:"name"`
+	BaseExperience int    `json:"base_experience"`
 }
 
 type PokemonEncounter struct {
@@ -99,4 +100,35 @@ func GetPokemonFromLocationArea(apiUrl string, cache *pokecache.Cache) ([]Pokemo
 	}
 
 	return pokemons, nil
+}
+
+func GetPokemonByName(apiUrl string, cache *pokecache.Cache) (Pokemon, error) {
+	var body []byte
+
+	if cached, ok := cache.Get(apiUrl); ok {
+		body = cached
+	} else {
+		res, err := http.Get(apiUrl)
+		if err != nil {
+			return Pokemon{}, err
+		}
+		bodyIo, err := io.ReadAll(res.Body)
+		if err != nil {
+			return Pokemon{}, err
+		}
+
+		defer res.Body.Close()
+
+		body = bodyIo
+
+		cache.Add(apiUrl, body)
+	}
+
+	var pokemon Pokemon
+	err := json.Unmarshal(body, &pokemon)
+	if err != nil {
+		return Pokemon{}, err
+	}
+
+	return pokemon, nil
 }

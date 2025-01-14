@@ -4,6 +4,8 @@ import (
 	"bufio"
 	"fmt"
 	"github.com/cc-jose-nieto/go-pokedex/internal/PokeApi"
+	"github.com/cc-jose-nieto/go-pokedex/internal/PokeBall"
+	"github.com/cc-jose-nieto/go-pokedex/internal/Pokedex"
 	"github.com/cc-jose-nieto/go-pokedex/internal/pokecache"
 	"github.com/joho/godotenv"
 	"os"
@@ -28,6 +30,10 @@ var actions = map[string]cliCommand{}
 
 var cache *pokecache.Cache = pokecache.NewCache(time.Second * 10)
 
+var pokedex Pokedex.Pokedex = Pokedex.Pokedex{
+	Pokemons: make(map[string]PokeApi.Pokemon),
+}
+
 func main() {
 	godotenv.Load()
 	c := Config{}
@@ -42,6 +48,7 @@ func main() {
 		"map":     {name: "map", description: "", callback: commandMapLocations},
 		"mapb":    {name: "mapb", description: "", callback: commandMapBackLocations},
 		"explore": {name: "explore", description: "", callback: commandExplore},
+		"catch":   {name: "catch", description: "", callback: commandCatch},
 	}
 	//fmt.Print("Welcome to the Pokedex!\n")
 	//fmt.Print("Usage:\n\n")
@@ -113,7 +120,6 @@ func commandMapLocations(c *Config, args ...string) error {
 }
 
 func commandMapBackLocations(c *Config, args ...string) error {
-	fmt.Println(c.Previous)
 	res, err := PokeApi.GetLocations(c.Previous, cache)
 
 	if err != nil {
@@ -145,6 +151,46 @@ func commandExplore(c *Config, args ...string) error {
 	for _, pokemon := range pokemons {
 		fmt.Println(pokemon.Name)
 	}
+
+	return nil
+}
+
+func commandCatch(c *Config, args ...string) error {
+	pokemonName := args[0]
+
+	if pokemonName == "" {
+		return nil
+	}
+
+	fmt.Printf("Throwing a Pokeball at %s...\n", pokemonName)
+
+	if strings.ToLower(pokemonName) == "maluco" {
+		time.Sleep(time.Second * 5)
+		fmt.Println("You caught a MALUCO!!!")
+		return nil
+	}
+
+	url := fmt.Sprintf("%s/pokemon/%s", c.PokeApiUrl, pokemonName)
+
+	pokemon, err := PokeApi.GetPokemonByName(url, cache)
+
+	if err != nil {
+		fmt.Printf("Pokemon %s does not exist", pokemonName)
+		return nil
+	}
+
+	time.Sleep(time.Second * 5)
+	if ok := PokeBall.Catching(pokemon); ok {
+		err = pokedex.Add(pokemon)
+		if err != nil {
+			fmt.Printf("error adding pokemon to pokedex: %v\n", err)
+			return nil
+		}
+	} else {
+		fmt.Println("pokemon not caught, try again")
+	}
+
+	fmt.Println(pokemon)
 
 	return nil
 }
